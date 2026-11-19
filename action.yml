@@ -1,6 +1,6 @@
 name: Conventional commits
 description: >-
-  Lint every commit of the pull request with commitlint-config-mbologna:
+  Lint every commit of the pull request, or of the push, with commitlint-config-mbologna:
   config-conventional, 72-column header and body lines (Renovate's update
   headers up to 100), no Co-authored-by or AI "Generated with" lines, and no
   fixup!, squash! or amend! commits.
@@ -16,11 +16,13 @@ runs:
       shell: bash
       working-directory: ${{ github.action_path }}
       run: npm ci --omit=dev --silent --no-audit --no-fund
-    - name: Lint the pull request's commits
+    - name: Lint the commits of the pull request or push
       shell: bash
       working-directory: ${{ github.action_path }}
       env:
         GH_TOKEN: ${{ github.token }}
         REPO: ${{ github.repository }}
         PR: ${{ github.event.pull_request.number }}
+        BEFORE: ${{ github.event.before }}
+        AFTER: ${{ github.event.after || github.sha }}
       run: node bin/commitlint-pr.mjs
