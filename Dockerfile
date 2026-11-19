@@ -1,4 +1,4 @@
-FROM node:24.22.3-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS build
+FROM node:26.12.0-alpine@sha256:6f08a523443ddedf52941874c203475b0ad503e859ad70cb26ab8be9a517dbd5 AS build
 
 # Install exactly what package-lock.json pins, without the dev tools.
 WORKDIR /opt/commitlint-config
@@ -8,7 +8,7 @@ COPY index.mjs ./
 COPY lib/ lib/
 COPY bin/ bin/
 
-FROM node:24.22.3-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5
+FROM node:26.12.0-alpine@sha256:6f08a523443ddedf52941874c203475b0ad503e859ad70cb26ab8be9a517dbd5
 COPY --from=build /opt/commitlint-config /opt/commitlint-config
 # git: commitlint-range reads the commits of the range it lints. A CI job runs
 # this image on a checkout owned by another user (GitLab clones as root, the

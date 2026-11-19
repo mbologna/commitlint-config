@@ -24,7 +24,7 @@ jobs:
   node:
     uses: mbologna/.github/.github/workflows/node-ci.yml@83d39a4240d67465401ca87bfea7dd0fe33d3fe3 # main
     with:
-      node_version: "24"
+      node_version: "26"
       enable_audit: true
 
   docker:
@@ -64,4 +64,4 @@ jobs:
       id-token: write
     uses: mbologna/.github/.github/workflows/npm-publish.yml@83d39a4240d67465401ca87bfea7dd0fe33d3fe3 # main
     with:
-      node_version: "24"
+      node_version: "26"
