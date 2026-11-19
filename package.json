@@ -1,7 +1,7 @@
 {
   "name": "commitlint-config-mbologna",
   "version": "0.0.0",
-  "description": "The commit rules of every repository under mbologna: config-conventional, 72-column headers and bodies, no attribution trailers, plus a CI range linter with a fixup gate",
+  "description": "The commit rules of every repository under mbologna: config-conventional, 72-column headers and bodies, no attribution trailers, plus a CI range linter with fixup and stale-tree gates",
   "type": "module",
   "exports": {
     ".": "./index.mjs",
@@ -9,7 +9,8 @@
   },
   "bin": {
     "commitlint-range": "./bin/commitlint-range.mjs",
-    "commitlint-pr": "./bin/commitlint-pr.mjs"
+    "commitlint-pr": "./bin/commitlint-pr.mjs",
+    "commit-tree-check": "./bin/commit-tree-check.mjs"
   },
   "files": [
     "index.mjs",

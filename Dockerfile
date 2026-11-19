@@ -23,6 +23,7 @@ RUN apk add --no-cache nodejs git \
     && apk upgrade --no-cache
 COPY --from=build /opt/commitlint-config /opt/commitlint-config
 RUN ln -s /opt/commitlint-config/bin/commitlint-range.mjs /usr/local/bin/commitlint-range \
+    && ln -s /opt/commitlint-config/bin/commit-tree-check.mjs /usr/local/bin/commit-tree-check \
     && ln -s /opt/commitlint-config/node_modules/.bin/commitlint /usr/local/bin/commitlint
 USER node
 ENTRYPOINT []

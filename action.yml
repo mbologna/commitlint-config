@@ -2,12 +2,14 @@ name: Conventional commits
 description: >-
   Lint every commit of the pull request, or of the push, with commitlint-config-mbologna:
   config-conventional, 72-column header and body lines (Renovate's update
-  headers up to 100), no Co-authored-by or AI "Generated with" lines, and no
-  fixup!, squash! or amend! commits.
+  headers up to 100), no Co-authored-by or AI "Generated with" lines, no
+  fixup!, squash! or amend! commits, and, on a checkout with full history, no
+  commit that puts files back to older versions without saying so.
 
 # The config and the linter come from this action's own checkout, so a
-# caller's pin covers both. The messages come from the API: the job needs
-# only pull-requests: read and no checkout.
+# caller's pin covers both. The messages come from the API: the lint needs
+# only pull-requests: read and no checkout. The stale-tree check reads history:
+# the caller's checkout if it has it all, else a partial clone of its own.
 
 runs:
   using: composite
@@ -26,3 +28,41 @@ runs:
         BEFORE: ${{ github.event.before }}
         AFTER: ${{ github.event.after || github.sha }}
       run: node bin/commitlint-pr.mjs
+    - name: Check that no commit puts files back to older versions
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        GH_TOKEN: ${{ github.token }}
+        REPO: ${{ github.repository }}
+        PR: ${{ github.event.pull_request.number }}
+        BASE: ${{ github.event.pull_request.base.sha }}
+        HEAD: ${{ github.event.pull_request.head.sha }}
+        BEFORE: ${{ github.event.before }}
+        AFTER: ${{ github.event.after || github.sha }}
+        GIT_TERMINAL_PROMPT: "0"
+      run: |
+        # The check reads history. Without a full checkout, clone it (trees
+        # and commits only): anonymously, which any public repository allows
+        # whatever the job's permissions, else with the token, which a private
+        # caller grants contents: read.
+        dir=.
+        if [ "$(git rev-parse --is-shallow-repository 2>/dev/null)" != false ]; then
+          dir=$RUNNER_TEMP/commit-history
+          url=https://github.com/$REPO
+          if ! git clone -q --bare --filter=blob:none "$url" "$dir" 2>/dev/null; then
+            auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')
+            export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0="http.$url/.extraheader"
+            export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $auth"
+            git clone -q --bare --filter=blob:none "$url" "$dir"
+          fi
+          [ -z "$PR" ] || git -C "$dir" fetch -q origin "+refs/pull/$PR/head:refs/pull-head"
+        fi
+        cd "$dir"
+        if [ -n "$BASE" ]; then
+          from=$BASE to=$HEAD
+        elif [ -n "${BEFORE//0/}" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+          from=$BEFORE to=$AFTER
+        else
+          from=$AFTER~1 to=$AFTER
+        fi
+        node "$ACTION_PATH/bin/commit-tree-check.mjs" "$from" "$to"

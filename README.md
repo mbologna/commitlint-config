@@ -49,13 +49,25 @@ the global commit-msg hook falls back to in a repository without a config.
 
 **In CI**, every commit of a pull request is linted, and `fixup!`, `squash!`
 and `amend!` commits fail (fold them in with `git rebase -i --autosquash`
-first; the local hook lets them through so `git commit --fixup` works):
+first; the local hook lets them through so `git commit --fixup` works).
 
-| Where         | How                                                                                                                                                                                                                                                                                                                                                            |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GitHub        | `mbologna/.github`'s reusable `commits.yml` runs this repository's [action](action.yml) (`bin/commitlint-pr.mjs`) on pull requests, and on pushes where a caller adds a `push` trigger (the private repositories, which GitHub Free gives no rulesets: a push check reports what it can't block). The messages come from the API, so the job needs no checkout |
-| GitLab        | ci-templates' `commits` component runs `commitlint-range "$CI_MERGE_REQUEST_DIFF_BASE_SHA" "$CI_COMMIT_SHA"` in `ghcr.io/mbologna/commitlint-config`                                                                                                                                                                                                           |
-| Anywhere else | `npm install commitlint-config-mbologna`, then `npx commitlint-range <from> <to>`: the repository's own config if it has one, the base otherwise                                                                                                                                                                                                               |
+A commit that puts files back to versions they had before their latest
+change fails too ([`lib/stale-tree.mjs`](lib/stale-tree.mjs)): that is a
+stale index, typically `git reset --soft` onto a ref that moved since the
+branch last looked, and its commit silently undoes what the branch gained in
+between. One to three such files only warn (setting a value back is
+legitimate); four or more fail (`STALE_TREE_MIN_FILES` moves the line). A
+subject that says `revert` is exempt, and so is a commit that re-applies an
+earlier one. The check needs full history: `commitlint-range` and
+`commit-tree-check <from> <to>` run it on a full clone, and the action makes
+a partial clone of its own (anonymous for a public repository, with the
+token for a private one) when the caller has no full checkout.
+
+| Where         | How                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitHub        | `mbologna/.github`'s reusable `commits.yml` runs this repository's [action](action.yml) (`bin/commitlint-pr.mjs`) on pull requests, and on pushes where a caller adds a `push` trigger (the private repositories, which GitHub Free gives no rulesets: a push check reports what it can't block). The messages come from the API, so the job needs no checkout; the stale-tree check clones the history it reads |
+| GitLab        | ci-templates' `commits` component runs `commitlint-range "$CI_MERGE_REQUEST_DIFF_BASE_SHA" "$CI_COMMIT_SHA"` in `ghcr.io/mbologna/commitlint-config`                                                                                                                                                                                                                                                             |
+| Anywhere else | `npm install commitlint-config-mbologna`, then `npx commitlint-range <from> <to>`: the repository's own config if it has one, the base otherwise                                                                                                                                                                                                                                                                 |
 
 ## Releases
 
