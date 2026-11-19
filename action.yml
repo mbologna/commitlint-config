@@ -1,0 +1,26 @@
+name: Conventional commits
+description: >-
+  Lint every commit of the pull request with commitlint-config-mbologna:
+  config-conventional, 72-column header and body lines (Renovate's update
+  headers up to 100), no Co-authored-by or AI "Generated with" lines, and no
+  fixup!, squash! or amend! commits.
+
+# The config and the linter come from this action's own checkout, so a
+# caller's pin covers both. The messages come from the API: the job needs
+# only pull-requests: read and no checkout.
+
+runs:
+  using: composite
+  steps:
+    - name: Install commitlint
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm ci --omit=dev --silent --no-audit --no-fund
+    - name: Lint the pull request's commits
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REPO: ${{ github.repository }}
+        PR: ${{ github.event.pull_request.number }}
+      run: node bin/commitlint-pr.mjs

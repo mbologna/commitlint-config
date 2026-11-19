@@ -1,0 +1,67 @@
+name: CI
+
+"on":
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+  # A manual run on main releases whatever is unreleased; auto-release also
+  # dispatches this workflow on the tag it creates.
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Never cancel a run on the default branch: it may be releasing, and a cut
+  # release leaves a tag without its Release.
+  cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+
+permissions:
+  contents: read
+
+jobs:
+  node:
+    uses: mbologna/.github/.github/workflows/node-ci.yml@83d39a4240d67465401ca87bfea7dd0fe33d3fe3 # main
+    with:
+      node_version: "24"
+      enable_audit: true
+
+  docker:
+    needs: node
+    # contents: the release tag and its Release; actions: dispatch the tag
+    # build (a tag pushed with GITHUB_TOKEN triggers no run); the rest:
+    # push, sign and scan the image.
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+      attestations: write
+      security-events: write
+      actions: write
+    uses: mbologna/.github/.github/workflows/docker-ci.yml@83d39a4240d67465401ca87bfea7dd0fe33d3fe3 # main
+    with:
+      image_name: commitlint-config
+      # Only release tags publish the image (auto-release dispatches their
+      # build); pull requests build it without pushing.
+      publish: release
+      push_to_dockerhub: false
+      # auto-release runs inside docker-ci: Monday's schedule releases with
+      # this strategy, a push to main only a CVE fix.
+      release_strategy: conventional
+      # commitlint-range runs git log on the job's checkout.
+      allowed_tools: git
+      smoke_cmd: "commitlint-range --version"
+    secrets: inherit
+
+  publish:
+    # The npm package, from the same release tag as the image. npm's trusted
+    # publisher for commitlint-config-mbologna names this workflow (ci.yml).
+    needs: docker
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      id-token: write
+    uses: mbologna/.github/.github/workflows/npm-publish.yml@83d39a4240d67465401ca87bfea7dd0fe33d3fe3 # main
+    with:
+      node_version: "24"

@@ -1,0 +1,53 @@
+{
+  "name": "commitlint-config-mbologna",
+  "version": "0.0.0",
+  "description": "The commit rules of every repository under mbologna: config-conventional, 72-column headers and bodies, no attribution trailers, plus a CI range linter with a fixup gate",
+  "type": "module",
+  "exports": {
+    ".": "./index.mjs",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "commitlint-range": "./bin/commitlint-range.mjs",
+    "commitlint-pr": "./bin/commitlint-pr.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "lib/",
+    "bin/"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "commitlint",
+    "commitlint-config",
+    "conventional-commits"
+  ],
+  "license": "MIT",
+  "author": "Michele Bologna",
+  "homepage": "https://github.com/mbologna/commitlint-config#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mbologna/commitlint-config.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mbologna/commitlint-config/issues"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint . && prettier --check ."
+  },
+  "dependencies": {
+    "@commitlint/cli": "^21.2.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.10"
+  },
+  "overrides": {
+    "minimatch": "^11.0.1"
+  }
+}
