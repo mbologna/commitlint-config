@@ -62,7 +62,7 @@ test("a stale index that undoes a merged change fails", () => {
   const r = run(CHECK, dir, main);
   assert.equal(r.status, 1, r.out);
   assert.match(r.out, /puts 5 files back to an older version/);
-  assert.match(r.out, /a\.txt: the version before [0-9a-f]+ feat: the change/);
+  assert.match(r.out, /a\.txt: the version before [0-9a-f]{12} feat: the change/);
   assert.match(r.out, /merge-base/);
   assert.notEqual(base, main);
 });
