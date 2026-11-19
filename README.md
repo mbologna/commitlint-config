@@ -51,11 +51,11 @@ the global commit-msg hook falls back to in a repository without a config.
 and `amend!` commits fail (fold them in with `git rebase -i --autosquash`
 first; the local hook lets them through so `git commit --fixup` works):
 
-| Where         | How                                                                                                                                                                                            |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GitHub        | `mbologna/.github`'s reusable `commits.yml` runs this repository's [action](action.yml) (`bin/commitlint-pr.mjs`): the messages come from the API, so the job needs only `pull-requests: read` |
-| GitLab        | ci-templates' `commits` component runs `commitlint-range "$CI_MERGE_REQUEST_DIFF_BASE_SHA" "$CI_COMMIT_SHA"` in `ghcr.io/mbologna/commitlint-config`                                           |
-| Anywhere else | `npm install commitlint-config-mbologna`, then `npx commitlint-range <from> <to>`: the repository's own config if it has one, the base otherwise                                               |
+| Where         | How                                                                                                                                                                                                                                                                                                                                                            |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitHub        | `mbologna/.github`'s reusable `commits.yml` runs this repository's [action](action.yml) (`bin/commitlint-pr.mjs`) on pull requests, and on pushes where a caller adds a `push` trigger (the private repositories, which GitHub Free gives no rulesets: a push check reports what it can't block). The messages come from the API, so the job needs no checkout |
+| GitLab        | ci-templates' `commits` component runs `commitlint-range "$CI_MERGE_REQUEST_DIFF_BASE_SHA" "$CI_COMMIT_SHA"` in `ghcr.io/mbologna/commitlint-config`                                                                                                                                                                                                           |
+| Anywhere else | `npm install commitlint-config-mbologna`, then `npx commitlint-range <from> <to>`: the repository's own config if it has one, the base otherwise                                                                                                                                                                                                               |
 
 ## Releases
 
