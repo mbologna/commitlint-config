@@ -8,22 +8,22 @@ COPY index.mjs ./
 COPY lib/ lib/
 COPY bin/ bin/
 
-FROM node:26.12.0-alpine@sha256:6f08a523443ddedf52941874c203475b0ad503e859ad70cb26ab8be9a517dbd5
-COPY --from=build /opt/commitlint-config /opt/commitlint-config
+# Alpine's own nodejs package rather than the node image: a CI job pulls this
+# image on every merge request, and the node image's runtime layer alone
+# outweighs this whole image (57 MB against 37 MB compressed).
+FROM alpine:3.23@sha256:469c9ea410b9215eaee7976ba6c0639039b444be8e5d638f7abbada189971eb2
 # git: commitlint-range reads the commits of the range it lints. A CI job runs
 # this image on a checkout owned by another user (GitLab clones as root, the
 # job runs as node), which git refuses as "dubious ownership" unless trusted.
-# The base image's npm, npx, corepack and yarn are never used at run time;
-# removing them keeps their CVEs out of the image. The distribution's
-# security fixes published since the base image was built come last.
-RUN apk add --no-cache git \
+# The distribution's security fixes published since the base image was built
+# come last.
+RUN apk add --no-cache nodejs git \
     && git config --system --add safe.directory '*' \
-    && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
-        /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
-        /usr/local/bin/yarn /usr/local/bin/yarnpkg /opt/yarn-v* \
-    && ln -s /opt/commitlint-config/bin/commitlint-range.mjs /usr/local/bin/commitlint-range \
-    && ln -s /opt/commitlint-config/node_modules/.bin/commitlint /usr/local/bin/commitlint \
+    && adduser -D -u 1000 -h /home/node node \
     && apk upgrade --no-cache
+COPY --from=build /opt/commitlint-config /opt/commitlint-config
+RUN ln -s /opt/commitlint-config/bin/commitlint-range.mjs /usr/local/bin/commitlint-range \
+    && ln -s /opt/commitlint-config/node_modules/.bin/commitlint /usr/local/bin/commitlint
 USER node
 ENTRYPOINT []
 CMD ["commitlint-range", "--version"]
