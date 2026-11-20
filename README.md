@@ -69,10 +69,13 @@ token for a private one) when the caller has no full checkout.
 | GitLab        | ci-templates' `commits` component runs `commitlint-range "$CI_MERGE_REQUEST_DIFF_BASE_SHA" "$CI_COMMIT_SHA"` in `ghcr.io/mbologna/commitlint-config`                                                                                                                                                                                                                                                             |
 | Anywhere else | `npm install commitlint-config-mbologna`, then `npx commitlint-range <from> <to>`: the repository's own config if it has one, the base otherwise                                                                                                                                                                                                                                                                 |
 
-## Releases
+## Versioning
 
-auto-release tags `vX.Y.Z` on Monday when a releasable commit landed; the
-tag publishes the npm package (trusted publishing) and the image
-(`ghcr.io/mbologna/commitlint-config:X.Y.Z`, signed with cosign). Renovate
-moves the pins in every consumer. An urgent rule change can be released by
-running the CI workflow by hand on `main`.
+Releases follow SemVer: [auto-release](https://github.com/mbologna/auto-release)
+tags `vX.Y.Z` on Monday when a releasable commit landed, from the Conventional
+Commit types (`feat` minor; `fix`, `perf`, `revert` patch; a breaking change
+major). The tag publishes the npm package as `X.Y.Z` (trusted publishing) and
+the image `ghcr.io/mbologna/commitlint-config` as `X.Y.Z`, `X.Y` and `latest`,
+signed with cosign. Renovate moves the pins in every consumer. An urgent rule
+change can be released by running the CI workflow by hand on `main`. See the
+[versioning standard](https://github.com/mbologna/.github/blob/main/VERSIONING.md).
