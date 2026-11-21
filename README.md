@@ -58,10 +58,15 @@ branch last looked, and its commit silently undoes what the branch gained in
 between. One to three such files only warn (setting a value back is
 legitimate); four or more fail (`STALE_TREE_MIN_FILES` moves the line). A
 subject that says `revert` is exempt, and so is a commit that re-applies an
-earlier one. The check needs full history: `commitlint-range` and
-`commit-tree-check <from> <to>` run it on a full clone, and the action makes
-a partial clone of its own (anonymous for a public repository, with the
-token for a private one) when the caller has no full checkout.
+earlier one. A merge commit is judged on what it did beyond the clean merge of
+its parents (`git merge-tree`, git 2.38 or later): a conflict resolved by
+taking one side's files puts back the older version of every file only the
+other side changed, and so does a merge that drops the branch's changes. The
+same thresholds and `revert` exemption apply. The check needs full history:
+`commitlint-range` and `commit-tree-check <from> <to>` run it on a full
+clone, and the action makes a partial clone of its own (anonymous for a
+public repository, with the token for a private one) when the caller has no
+full checkout.
 
 | Where         | How                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -129,6 +129,108 @@ test("commitlint-range fails a stale commit too", () => {
   assert.match(r.out, /0 fixup, 1 restore older file versions/);
 });
 
+// A branch that changes f.txt while main changes every file in FILES; the merge
+// is left uncommitted for the test to resolve.
+function divergedMerge(mainText = "v2") {
+  const t = repo();
+  const base = t.commit("chore: base", t.all("v1"));
+  t.git("switch", "-q", "-c", "feature");
+  t.commit("feat: the feature", { "f.txt": "feature\n" });
+  t.git("switch", "-q", "main");
+  t.commit("feat: the change main gained", t.all(mainText));
+  t.git(
+    "-c",
+    "core.hooksPath=/dev/null",
+    "merge",
+    "-q",
+    "--no-ff",
+    "--no-commit",
+    "feature"
+  );
+  const commitMerge = () =>
+    t.git("-c", "core.hooksPath=/dev/null", "commit", "-q", "--no-edit", "--no-verify");
+  return { ...t, base, commitMerge };
+}
+
+test("a merge that takes one side's files over main's changes fails", () => {
+  // `git checkout --theirs .` on a conflicted merge, or any resolution that
+  // copies the branch's tree: the files only main changed go back to v1.
+  const { dir, git, base, commitMerge } = divergedMerge();
+  git("checkout", "feature", "--", ".");
+  commitMerge();
+  const r = run(CHECK, dir, base);
+  assert.equal(r.status, 1, r.out);
+  assert.match(r.out, /the merge itself puts 5 files back to an older version/);
+  assert.match(
+    r.out,
+    /a\.txt: the version before [0-9a-f]{12} feat: the change main gained \(merged into side\)/
+  );
+  assert.match(r.out, /checkout --ours/);
+});
+
+test("a merge that drops the branch's changes fails", () => {
+  const { dir, git, commit, all } = repo();
+  const base = commit("chore: base", all("v1"));
+  git("switch", "-q", "-c", "feature");
+  commit("feat: the feature", all("v2"));
+  git("switch", "-q", "main");
+  commit("feat: something on main", { "g.txt": "main\n" });
+  git(
+    "-c",
+    "core.hooksPath=/dev/null",
+    "merge",
+    "-q",
+    "--no-ff",
+    "-s",
+    "ours",
+    "--no-edit",
+    "feature"
+  );
+  const r = run(CHECK, dir, base);
+  assert.equal(r.status, 1, r.out);
+  assert.match(
+    r.out,
+    /a\.txt: the version before [0-9a-f]{12} feat: the feature \(merged side\)/
+  );
+});
+
+test("clean and properly resolved merges pass", () => {
+  const { dir, git, base, commitMerge } = divergedMerge();
+  commitMerge();
+  // A conflict resolved by hand, keeping both sides.
+  git("switch", "-q", "-c", "other", base);
+  writeFileSync(join(dir, "a.txt"), "a.txt other\n");
+  git("commit", "-q", "--no-verify", "-am", "feat: other");
+  git("switch", "-q", "main");
+  const conflict = spawnSync(
+    "git",
+    ["-c", "core.hooksPath=/dev/null", "merge", "-q", "--no-ff", "--no-commit", "other"],
+    { cwd: dir }
+  );
+  assert.equal(conflict.status, 1);
+  writeFileSync(join(dir, "a.txt"), "a.txt v2 and other\n");
+  git("add", "a.txt");
+  git("-c", "core.hooksPath=/dev/null", "commit", "-q", "--no-edit", "--no-verify");
+  const r = run(CHECK, dir, base);
+  assert.equal(r.status, 0, r.out);
+  assert.match(r.out, /5 commits .* 0 restore/);
+});
+
+test("a merge whose subject says revert is exempt", () => {
+  const { dir, git, base } = divergedMerge();
+  git("checkout", "feature", "--", ".");
+  git(
+    "-c",
+    "core.hooksPath=/dev/null",
+    "commit",
+    "-q",
+    "--no-verify",
+    "-m",
+    "revert: back to v1"
+  );
+  assert.equal(run(CHECK, dir, base).status, 0);
+});
+
 test("a bad range is a usage error", () => {
   const { dir, commit } = repo();
   commit("chore: base", { "a.txt": "x\n" });
