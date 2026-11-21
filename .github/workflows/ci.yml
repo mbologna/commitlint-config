@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   node:
-    uses: mbologna/.github/.github/workflows/node-ci.yml@ce1db2ef60f24345ab930d7434672fcd99556804 # main
+    uses: mbologna/.github/.github/workflows/node-ci.yml@52b335cb95b89c4084d3914b07fbceadc9a4e322 # main
     with:
       node_version: "26"
       enable_audit: true
@@ -39,7 +39,7 @@ jobs:
       attestations: write
       security-events: write
       actions: write
-    uses: mbologna/.github/.github/workflows/docker-ci.yml@ce1db2ef60f24345ab930d7434672fcd99556804 # main
+    uses: mbologna/.github/.github/workflows/docker-ci.yml@52b335cb95b89c4084d3914b07fbceadc9a4e322 # main
     with:
       image_name: commitlint-config
       # Only release tags publish the image (auto-release dispatches their
@@ -62,6 +62,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: mbologna/.github/.github/workflows/npm-publish.yml@ce1db2ef60f24345ab930d7434672fcd99556804 # main
+    uses: mbologna/.github/.github/workflows/npm-publish.yml@52b335cb95b89c4084d3914b07fbceadc9a4e322 # main
     with:
       node_version: "26"
