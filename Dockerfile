@@ -11,7 +11,7 @@ COPY bin/ bin/
 # Alpine's own nodejs package rather than the node image: a CI job pulls this
 # image on every merge request, and the node image's runtime layer alone
 # outweighs this whole image (57 MB against 37 MB compressed).
-FROM alpine:3.23@sha256:469c9ea410b9215eaee7976ba6c0639039b444be8e5d638f7abbada189971eb2
+FROM alpine:3.24@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf
 # git: commitlint-range reads the commits of the range it lints. A CI job runs
 # this image on a checkout owned by another user (GitLab clones as root, the
 # job runs as node), which git refuses as "dubious ownership" unless trusted.
