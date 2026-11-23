@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   node:
-    uses: mbologna/.github/.github/workflows/node-ci.yml@698761bc5a4c53f01bfc6c2303da576418c8ec04 # main
+    uses: mbologna/.github/.github/workflows/node-ci.yml@d17b76ff2f8404153bf1fa08e875e6972b046c09 # main
     with:
       node_version: "26"
       enable_audit: true
@@ -39,13 +39,12 @@ jobs:
       attestations: write
       security-events: write
       actions: write
-    uses: mbologna/.github/.github/workflows/docker-ci.yml@698761bc5a4c53f01bfc6c2303da576418c8ec04 # main
+    uses: mbologna/.github/.github/workflows/docker-ci.yml@d17b76ff2f8404153bf1fa08e875e6972b046c09 # main
     with:
       image_name: commitlint-config
       # Only release tags publish the image (auto-release dispatches their
       # build); pull requests build it without pushing.
       publish: release
-      push_to_dockerhub: false
       # auto-release runs inside docker-ci: Monday's schedule releases with
       # this strategy, a push to main only a CVE fix.
       release_strategy: conventional
@@ -62,6 +61,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: mbologna/.github/.github/workflows/npm-publish.yml@698761bc5a4c53f01bfc6c2303da576418c8ec04 # main
+    uses: mbologna/.github/.github/workflows/npm-publish.yml@d17b76ff2f8404153bf1fa08e875e6972b046c09 # main
     with:
       node_version: "26"
