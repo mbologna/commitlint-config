@@ -74,6 +74,19 @@ full checkout.
 | GitLab        | ci-templates' `commits` component runs `commitlint-range "$CI_MERGE_REQUEST_DIFF_BASE_SHA" "$CI_COMMIT_SHA"` in `ghcr.io/mbologna/commitlint-config`                                                                                                                                                                                                                                                             |
 | Anywhere else | `npm install commitlint-config-mbologna`, then `npx commitlint-range <from> <to>`: the repository's own config if it has one, the base otherwise                                                                                                                                                                                                                                                                 |
 
+## Why not an existing tool
+
+- [commitlint](https://commitlint.js.org/) (the commit message linter): the rules are
+  already commitlint configuration. Its official CI recipe (`npx commitlint --from --to`)
+  needs a checkout.
+- No upstream tool has the stale-tree check, which fails a commit that puts files back to
+  older versions.
+- No upstream tool lints a pull request's commits from the API without a checkout.
+- [wagoid/commitlint-github-action](https://github.com/wagoid/commitlint-github-action) (a
+  GitHub Action that runs commitlint) has had no release since January 2025.
+
+Checked 2026-11-23.
+
 ## Versioning
 
 Releases follow SemVer: [auto-release](https://github.com/mbologna/auto-release)
