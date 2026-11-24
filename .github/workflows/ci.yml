@@ -29,29 +29,39 @@ jobs:
 
   docker:
     needs: node
-    # contents: the release tag and its Release; actions: dispatch the tag
-    # build (a tag pushed with GITHUB_TOKEN triggers no run); the rest:
-    # push, sign and scan the image.
+    # Build, push, sign and scan the image; the auto-release job below releases.
     permissions:
-      contents: write
+      contents: read
       packages: write
       id-token: write
       attestations: write
       security-events: write
-      actions: write
     uses: mbologna/.github/.github/workflows/docker-ci.yml@d17b76ff2f8404153bf1fa08e875e6972b046c09 # main
     with:
       image_name: commitlint-config
       # Only release tags publish the image (auto-release dispatches their
       # build); pull requests build it without pushing.
       publish: release
-      # auto-release runs inside docker-ci: Monday's schedule releases with
-      # this strategy, a push to main only a CVE fix.
-      release_strategy: conventional
       # commitlint-range runs git log on the job's checkout.
       allowed_tools: git
       smoke_cmd: "commitlint-range --version"
     secrets: inherit
+
+  # Monday's schedule tags vX.Y.Z when a feat, fix, perf, revert or breaking commit
+  # landed (or a maintenance release for dependency updates), a push to main tags
+  # only a CVE fix; it dispatches the tag build that publishes the X.Y.Z image.
+  auto-release:
+    needs: [node, docker]
+    # contents: push the tag and create the Release; actions: dispatch the tag
+    # build (a tag pushed with GITHUB_TOKEN triggers no run).
+    permissions:
+      contents: write
+      actions: write
+    uses: mbologna/.github/.github/workflows/auto-release.yml@d17b76ff2f8404153bf1fa08e875e6972b046c09 # main
+    with:
+      strategy: conventional
+      image: ghcr.io/mbologna/commitlint-config
+      dockerfiles: Dockerfile
 
   publish:
     # The npm package, from the same release tag as the image. npm's trusted
